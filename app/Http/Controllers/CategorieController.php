@@ -2,72 +2,64 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\User;
+use App\Models\Categorie;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
 
-class AuthController extends Controller
+class CategorieController extends Controller
 {
-    public function register(Request $request)
+    /**
+     * Display a listing of the resource.
+     */
+    public function index()
     {
-        $data = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email'],
-            'password' => ['required', 'string', 'min:6', 'confirmed'],
-        ]);
-
-        $user = User::create([
-            'name' => $data['name'],
-            'email' => $data['email'],
-            'password' => Hash::make($data['password']),
-        ]);
-
-        $token = $user->createToken('auth_token')->plainTextToken;
-
-        return response()->json([
-            'message' => 'Utilisateur inscrit avec succès',
-            'user' => $user,
-            'token' => $token,
-        ], 201);
+        //
     }
 
-    public function login(Request $request)
+    /**
+     * Show the form for creating a new resource.
+     */
+    public function create()
     {
-        $data = $request->validate([
-            'email' => ['required', 'string', 'email'],
-            'password' => ['required', 'string'],
-        ]);
-
-        $user = User::where('email', $data['email'])->first();
-
-        if (! $user || ! Hash::check($data['password'], $user->password)) {
-            return response()->json([
-                'message' => 'Email ou mot de passe incorrect',
-            ], 401);
-        }
-
-        $token = $user->createToken('auth_token')->plainTextToken;
-
-        return response()->json([
-            'message' => 'Connexion réussie',
-            'user' => $user,
-            'token' => $token,
-        ], 200);
+        //
     }
 
-    public function logout(Request $request)
+    /**
+     * Store a newly created resource in storage.
+     */
+    public function store(Request $request)
     {
-        $request->user()->currentAccessToken()->delete();
-
-        return response()->json([
-            'message' => 'Déconnexion réussie',
-        ], 200);
+        //
     }
 
-    public function profile(Request $request)
+    /**
+     * Display the specified resource.
+     */
+    public function show(Categorie $categorie)
     {
-        return response()->json([
-            'user' => $request->user(),
-        ], 200);
+        //
+    }
+
+    /**
+     * Show the form for editing the specified resource.
+     */
+    public function edit(Categorie $categorie)
+    {
+        //
+    }
+
+    /**
+     * Update the specified resource in storage.
+     */
+    public function update(Request $request, Categorie $categorie)
+    {
+        //
+    }
+
+    /**
+     * Remove the specified resource from storage.
+     */
+    public function destroy(Categorie $categorie)
+    {
+        //
     }
 }
