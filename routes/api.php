@@ -14,4 +14,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::apiResource('categories', CategorieController::class);
     Route::apiResource('plats', PlatController::class);
+
+        Route::post('/categories/{categorie}/plats',[PlatController::class,'storeByCategory']);
+
 });

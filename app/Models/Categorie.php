@@ -5,7 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
-class Category extends Model
+class Categorie extends Model
 {
     use HasFactory;
 
@@ -14,13 +14,13 @@ class Category extends Model
         'user_id',
     ];
 
-    public function plats()
-    {
-        return $this->hasMany(Plat::class);
-    }
-
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function plats()
+    {
+        return $this->hasMany(Plat::class, 'category_id');
     }
 }

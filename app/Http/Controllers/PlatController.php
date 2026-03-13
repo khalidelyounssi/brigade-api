@@ -4,62 +4,93 @@ namespace App\Http\Controllers;
 
 use App\Models\Plat;
 use Illuminate\Http\Request;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 
 class PlatController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
+    use AuthorizesRequests;
+
     public function index()
     {
-        //
+        return Plat::where('user_id', auth()->id())->get();
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
-    }
-
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request)
     {
-        //
+        $this->authorize('create', Plat::class);
+
+        $data = $request->validate([
+            'name' => 'required|string|max:255',
+            'description' => 'nullable|string',
+            'price' => 'required|numeric',
+            'category_id' => 'required|exists:categories,id'
+        ]);
+
+        $plat = Plat::create([
+            'name'=>$data['name'],
+            'description'=>$data['description'],
+            'price'=>$data['price'],
+            'category_id'=>$data['category_id'],
+            'user_id'=>auth()->id()
+        ]);
+
+        return response()->json($plat,201);
     }
 
-    /**
-     * Display the specified resource.
-     */
     public function show(Plat $plat)
     {
-        //
+        $this->authorize('view',$plat);
+
+        return response()->json($plat);
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(Plat $plat)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
     public function update(Request $request, Plat $plat)
     {
-        //
+        $this->authorize('update',$plat);
+
+        $data = $request->validate([
+            'name'=>'string|max:255',
+            'description'=>'nullable|string',
+            'price'=>'numeric',
+            'category_id'=>'exists:categories,id'
+        ]);
+
+        $plat->update($data);
+
+        return response()->json($plat);
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
     public function destroy(Plat $plat)
     {
-        //
+        $this->authorize('delete',$plat);
+
+        $plat->delete();
+
+        return response()->json([
+            'message'=>'Plat deleted'
+        ]);
     }
+    public function storeByCategory(Request $request, $categorieId)
+{
+    $this->authorize('create', Plat::class);
+
+    $data = $request->validate([
+        'name' => 'required|string|max:255',
+        'description' => 'nullable|string',
+        'price' => 'required|numeric'
+    ]);
+
+    $plat = Plat::create([
+        'name' => $data['name'],
+        'description' => $data['description'],
+        'price' => $data['price'],
+        'category_id' => $categorieId,
+        'user_id' => auth()->id()
+    ]);
+
+    return response()->json([
+        'message' => 'Plat ajouté à la catégorie',
+        'plat' => $plat
+    ], 201);
+}
 }

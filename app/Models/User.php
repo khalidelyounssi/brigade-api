@@ -15,6 +15,7 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'role',
     ];
 
     protected $hidden = [
@@ -29,10 +30,14 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
+    public function isAdmin()
+{
+    return $this->role === 'admin';
+}
 
     public function categories()
     {
-        return $this->hasMany(Category::class);
+        return $this->hasMany(Categorie::class);
     }
 
     public function plats()
