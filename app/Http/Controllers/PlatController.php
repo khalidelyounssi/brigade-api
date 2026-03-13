@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Plat;
 use Illuminate\Http\Request;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
 
 class PlatController extends Controller
 {
@@ -12,7 +13,9 @@ class PlatController extends Controller
 
     public function index()
     {
-        return Plat::where('user_id', auth()->id())->get();
+        return response()->json(
+            Plat::where('user_id', auth()->id())->get()
+        );
     }
 
     public function store(Request $request)
@@ -23,37 +26,51 @@ class PlatController extends Controller
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
             'price' => 'required|numeric',
-            'category_id' => 'required|exists:categories,id'
+            'category_id' => 'required|integer|exists:categories,id',
+            'image' => 'nullable|image'
         ]);
 
-        $plat = Plat::create([
-            'name'=>$data['name'],
-            'description'=>$data['description'],
-            'price'=>$data['price'],
-            'category_id'=>$data['category_id'],
-            'user_id'=>auth()->id()
-        ]);
+        if ($request->hasFile('image')) {
+            $imageUrl = Cloudinary::upload(
+                $request->file('image')->getRealPath()
+            )->getSecurePath();
 
-        return response()->json($plat,201);
+            $data['image'] = $imageUrl;
+        }
+
+        $data['user_id'] = auth()->id();
+
+        $plat = Plat::create($data);
+
+        return response()->json($plat, 201);
     }
 
     public function show(Plat $plat)
     {
-        $this->authorize('view',$plat);
+        $this->authorize('view', $plat);
 
         return response()->json($plat);
     }
 
     public function update(Request $request, Plat $plat)
     {
-        $this->authorize('update',$plat);
+        $this->authorize('update', $plat);
 
         $data = $request->validate([
-            'name'=>'string|max:255',
-            'description'=>'nullable|string',
-            'price'=>'numeric',
-            'category_id'=>'exists:categories,id'
+            'name' => 'sometimes|string|max:255',
+            'description' => 'sometimes|nullable|string',
+            'price' => 'sometimes|numeric',
+            'category_id' => 'sometimes|integer|exists:categories,id',
+            'image' => 'sometimes|nullable|image'
         ]);
+
+        if ($request->hasFile('image')) {
+            $imageUrl = Cloudinary::upload(
+                $request->file('image')->getRealPath()
+            )->getSecurePath();
+
+            $data['image'] = $imageUrl;
+        }
 
         $plat->update($data);
 
@@ -62,35 +79,42 @@ class PlatController extends Controller
 
     public function destroy(Plat $plat)
     {
-        $this->authorize('delete',$plat);
+        $this->authorize('delete', $plat);
 
         $plat->delete();
 
         return response()->json([
-            'message'=>'Plat deleted'
+            'message' => 'Plat deleted'
         ]);
     }
+
     public function storeByCategory(Request $request, $categorieId)
-{
-    $this->authorize('create', Plat::class);
+    {
+        $this->authorize('create', Plat::class);
 
-    $data = $request->validate([
-        'name' => 'required|string|max:255',
-        'description' => 'nullable|string',
-        'price' => 'required|numeric'
-    ]);
+        $data = $request->validate([
+            'name' => 'required|string|max:255',
+            'description' => 'nullable|string',
+            'price' => 'required|numeric',
+            'image' => 'nullable|image'
+        ]);
 
-    $plat = Plat::create([
-        'name' => $data['name'],
-        'description' => $data['description'],
-        'price' => $data['price'],
-        'category_id' => $categorieId,
-        'user_id' => auth()->id()
-    ]);
+        if ($request->hasFile('image')) {
+            $imageUrl = Cloudinary::upload(
+                $request->file('image')->getRealPath()
+            )->getSecurePath();
 
-    return response()->json([
-        'message' => 'Plat ajouté à la catégorie',
-        'plat' => $plat
-    ], 201);
-}
+            $data['image'] = $imageUrl;
+        }
+
+        $data['category_id'] = $categorieId;
+        $data['user_id'] = auth()->id();
+
+        $plat = Plat::create($data);
+
+        return response()->json([
+            'message' => 'Plat ajouté à la catégorie',
+            'plat' => $plat
+        ], 201);
+    }
 }

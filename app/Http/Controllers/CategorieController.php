@@ -4,9 +4,14 @@ namespace App\Http\Controllers;
 
 use App\Models\Categorie;
 use Illuminate\Http\Request;
+use App\Models\Plat;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
 
 class CategorieController extends Controller
+
 {
+    use AuthorizesRequests;
     public function index()
     {
         $categories = Categorie::where('user_id', auth()->id())->get();
