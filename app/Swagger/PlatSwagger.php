@@ -14,14 +14,22 @@ class PlatSwagger
     )]
     #[OA\RequestBody(
         required: true,
-        content: new OA\JsonContent(
-            required: ["name","price","category_id"],
-            properties: [
-                new OA\Property(property: "name", type: "string", example: "Pizza"),
-                new OA\Property(property: "description", type: "string", example: "Pizza fromage"),
-                new OA\Property(property: "price", type: "number", example: 10),
-                new OA\Property(property: "category_id", type: "integer", example: 1)
-            ]
+        content: new OA\MediaType(
+            mediaType: "multipart/form-data",
+            schema: new OA\Schema(
+                required: ["name","price","category_id"],
+                properties: [
+                    new OA\Property(property: "name", type: "string", example: "Pizza"),
+                    new OA\Property(property: "description", type: "string", example: "Pizza fromage"),
+                    new OA\Property(property: "price", type: "number", example: 10),
+                    new OA\Property(property: "category_id", type: "integer", example: 1),
+                    new OA\Property(
+                        property: "image",
+                        type: "string",
+                        format: "binary"
+                    )
+                ]
+            )
         )
     )]
     #[OA\Response(
@@ -77,6 +85,24 @@ class PlatSwagger
         in: "path",
         required: true,
         schema: new OA\Schema(type: "integer")
+    )]
+    #[OA\RequestBody(
+        content: new OA\MediaType(
+            mediaType: "multipart/form-data",
+            schema: new OA\Schema(
+                properties: [
+                    new OA\Property(property: "name", type: "string"),
+                    new OA\Property(property: "description", type: "string"),
+                    new OA\Property(property: "price", type: "number"),
+                    new OA\Property(property: "category_id", type: "integer"),
+                    new OA\Property(
+                        property: "image",
+                        type: "string",
+                        format: "binary"
+                    )
+                ]
+            )
+        )
     )]
     #[OA\Response(
         response: 200,
