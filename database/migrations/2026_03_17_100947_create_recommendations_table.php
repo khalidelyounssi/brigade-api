@@ -9,26 +9,25 @@ return new class extends Migration
     /**
      * Run the migrations.
      */
-    public function up()
-{
-    Schema::create('plates', function (Blueprint $table) {
+    public function up(): void
+    {
+        Schema::create('recommendations', function (Blueprint $table) {
     $table->id();
-    $table->foreignId('category_id')->constrained()->cascadeOnDelete();
     $table->foreignId('user_id')->constrained()->cascadeOnDelete();
-    $table->string('name');
-    $table->text('description')->nullable();
-    $table->decimal('price', 8, 2);
-    $table->string('image')->nullable();
-    $table->boolean('is_available')->default(true);
+    $table->foreignId('plate_id')->constrained()->cascadeOnDelete();
+    $table->integer('score');
+    $table->string('label');
+    $table->text('warning_message')->nullable();
+    $table->string('status')->default('processing');
     $table->timestamps();
 });
-}
+    }
 
     /**
      * Reverse the migrations.
      */
     public function down(): void
     {
-        Schema::dropIfExists('plats');
+        Schema::dropIfExists('recommendations');
     }
 };
