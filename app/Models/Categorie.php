@@ -11,7 +11,14 @@ class Categorie extends Model
 
     protected $fillable = [
         'name',
+        'description',
+        'color',
+        'is_active',
         'user_id',
+    ];
+
+    protected $casts = [
+        'is_active' => 'boolean',
     ];
 
     public function user()

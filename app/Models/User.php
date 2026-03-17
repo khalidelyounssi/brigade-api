@@ -16,6 +16,7 @@ class User extends Authenticatable
         'email',
         'password',
         'role',
+        'dietary_tags',
     ];
 
     protected $hidden = [
@@ -28,12 +29,14 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'dietary_tags' => 'array',
         ];
     }
+
     public function isAdmin()
-{
-    return $this->role === 'admin';
-}
+    {
+        return $this->role === 'admin';
+    }
 
     public function categories()
     {
@@ -43,5 +46,10 @@ class User extends Authenticatable
     public function plats()
     {
         return $this->hasMany(Plat::class);
+    }
+
+    public function recommendations()
+    {
+        return $this->hasMany(Recommendation::class);
     }
 }
