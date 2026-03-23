@@ -4,8 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Models\Plat;
 use Illuminate\Http\Request;
-use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use App\Models\Recommendation;
 
 class PlatController extends Controller
 {
@@ -13,21 +14,54 @@ class PlatController extends Controller
 
     public function index()
     {
-        return response()->json(
-            Plat::where('user_id', auth()->id())->get()
-        );
+        $plats = Plat::with(['categorie', 'ingredients', 'recommendations'])
+            ->where('is_available', true)
+            ->get()
+            ->map(function ($plat) {
+                $recommendation = $plat->recommendations()
+                    ->where('user_id', auth()->id())
+                    ->latest()
+                    ->first();
+
+                return [
+                    'id' => $plat->id,
+                    'name' => $plat->name,
+                    'description' => $plat->description,
+                    'price' => $plat->price,
+                    'image' => $plat->image,
+                    'is_available' => $plat->is_available,
+                    'category' => $plat->categorie,
+                    'ingredients' => $plat->ingredients,
+                    'recommendation' => $recommendation ? [
+                        'score' => $recommendation->score,
+                        'label' => $recommendation->label,
+                        'status' => $recommendation->status,
+                    ] : [
+                        'status' => 'processing'
+                    ],
+                ];
+            });
+
+        return response()->json($plats, 200);
     }
 
     public function store(Request $request)
     {
-        $this->authorize('create', Plat::class);
+        if (!auth()->user()->isAdmin()) {
+            return response()->json([
+                'message' => 'Accès interdit',
+            ], 403);
+        }
 
         $data = $request->validate([
-            'name' => 'required|string|max:255',
+            'name' => 'required|string|max:100',
             'description' => 'nullable|string',
-            'price' => 'required|numeric',
+            'price' => 'required|numeric|min:0',
             'category_id' => 'required|integer|exists:categories,id',
-            'image' => 'nullable|image'
+            'is_available' => 'nullable|boolean',
+            'ingredient_ids' => 'nullable|array',
+            'ingredient_ids.*' => 'exists:ingredients,id',
+            'image' => 'nullable|image',
         ]);
 
         if ($request->hasFile('image')) {
@@ -39,29 +73,64 @@ class PlatController extends Controller
         }
 
         $data['user_id'] = auth()->id();
+        $data['is_available'] = $data['is_available'] ?? true;
 
         $plat = Plat::create($data);
 
-        return response()->json($plat, 201);
+        if (!empty($data['ingredient_ids'])) {
+            $plat->ingredients()->sync($data['ingredient_ids']);
+        }
+
+        return response()->json([
+            'message' => 'Plat créé avec succès',
+            'plat' => $plat->load(['categorie', 'ingredients']),
+        ], 201);
     }
 
     public function show(Plat $plat)
     {
-        $this->authorize('view', $plat);
+        $recommendation = $plat->recommendations()
+            ->where('user_id', auth()->id())
+            ->latest()
+            ->first();
 
-        return response()->json($plat);
+        return response()->json([
+            'id' => $plat->id,
+            'name' => $plat->name,
+            'description' => $plat->description,
+            'price' => $plat->price,
+            'image' => $plat->image,
+            'is_available' => $plat->is_available,
+            'category' => $plat->categorie,
+            'ingredients' => $plat->ingredients,
+            'recommendation' => $recommendation ? [
+                'score' => $recommendation->score,
+                'label' => $recommendation->label,
+                'warning_message' => $recommendation->warning_message,
+                'status' => $recommendation->status,
+            ] : [
+                'status' => 'processing'
+            ],
+        ], 200);
     }
 
     public function update(Request $request, Plat $plat)
     {
-        $this->authorize('update', $plat);
+        if (!auth()->user()->isAdmin()) {
+            return response()->json([
+                'message' => 'Accès interdit',
+            ], 403);
+        }
 
         $data = $request->validate([
-            'name' => 'sometimes|string|max:255',
+            'name' => 'sometimes|string|max:100',
             'description' => 'sometimes|nullable|string',
-            'price' => 'sometimes|numeric',
+            'price' => 'sometimes|numeric|min:0',
             'category_id' => 'sometimes|integer|exists:categories,id',
-            'image' => 'sometimes|nullable|image'
+            'is_available' => 'sometimes|boolean',
+            'ingredient_ids' => 'sometimes|array',
+            'ingredient_ids.*' => 'exists:ingredients,id',
+            'image' => 'sometimes|nullable|image',
         ]);
 
         if ($request->hasFile('image')) {
@@ -74,29 +143,47 @@ class PlatController extends Controller
 
         $plat->update($data);
 
-        return response()->json($plat);
+        if (array_key_exists('ingredient_ids', $data)) {
+            $plat->ingredients()->sync($data['ingredient_ids'] ?? []);
+        }
+
+        return response()->json([
+            'message' => 'Plat mis à jour avec succès',
+            'plat' => $plat->load(['categorie', 'ingredients']),
+        ], 200);
     }
 
     public function destroy(Plat $plat)
     {
-        $this->authorize('delete', $plat);
+        if (!auth()->user()->isAdmin()) {
+            return response()->json([
+                'message' => 'Accès interdit',
+            ], 403);
+        }
 
         $plat->delete();
 
         return response()->json([
-            'message' => 'Plat deleted'
-        ]);
+            'message' => 'Plat supprimé avec succès',
+        ], 200);
     }
 
     public function storeByCategory(Request $request, $categorieId)
     {
-        $this->authorize('create', Plat::class);
+        if (!auth()->user()->isAdmin()) {
+            return response()->json([
+                'message' => 'Accès interdit',
+            ], 403);
+        }
 
         $data = $request->validate([
-            'name' => 'required|string|max:255',
+            'name' => 'required|string|max:100',
             'description' => 'nullable|string',
-            'price' => 'required|numeric',
-            'image' => 'nullable|image'
+            'price' => 'required|numeric|min:0',
+            'is_available' => 'nullable|boolean',
+            'ingredient_ids' => 'nullable|array',
+            'ingredient_ids.*' => 'exists:ingredients,id',
+            'image' => 'nullable|image',
         ]);
 
         if ($request->hasFile('image')) {
@@ -109,12 +196,17 @@ class PlatController extends Controller
 
         $data['category_id'] = $categorieId;
         $data['user_id'] = auth()->id();
+        $data['is_available'] = $data['is_available'] ?? true;
 
         $plat = Plat::create($data);
 
+        if (!empty($data['ingredient_ids'])) {
+            $plat->ingredients()->sync($data['ingredient_ids']);
+        }
+
         return response()->json([
             'message' => 'Plat ajouté à la catégorie',
-            'plat' => $plat
+            'plat' => $plat->load(['categorie', 'ingredients']),
         ], 201);
     }
 }
