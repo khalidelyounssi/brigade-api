@@ -12,7 +12,7 @@ class CategorieController extends Controller
 
     public function index(Request $request)
     {
-        $query = Categorie::query();
+        $query = Categorie::query()->where('user_id', auth()->id());
 
         if ($request->has('active')) {
             $active = filter_var($request->query('active'), FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
@@ -57,12 +57,23 @@ class CategorieController extends Controller
 
     public function show(Categorie $categorie)
     {
+        if ((int) $categorie->user_id !== (int) auth()->id()) {
+            return response()->json([
+                'message' => 'Accès interdit',
+            ], 403);
+        }
+
         return response()->json($categorie, 200);
     }
 
     public function update(Request $request, Categorie $categorie)
     {
         if (!auth()->user()->isAdmin()) {
+            return response()->json([
+                'message' => 'Accès interdit',
+            ], 403);
+        }
+        if ((int) $categorie->user_id !== (int) auth()->id()) {
             return response()->json([
                 'message' => 'Accès interdit',
             ], 403);
@@ -86,6 +97,11 @@ class CategorieController extends Controller
     public function destroy(Categorie $categorie)
     {
         if (!auth()->user()->isAdmin()) {
+            return response()->json([
+                'message' => 'Accès interdit',
+            ], 403);
+        }
+        if ((int) $categorie->user_id !== (int) auth()->id()) {
             return response()->json([
                 'message' => 'Accès interdit',
             ], 403);

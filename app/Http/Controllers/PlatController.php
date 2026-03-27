@@ -3,10 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Models\Plat;
+use App\Models\Categorie;
 use Illuminate\Http\Request;
 use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
-use App\Models\Recommendation;
+use Illuminate\Validation\Rule;
 
 class PlatController extends Controller
 {
@@ -57,7 +58,13 @@ class PlatController extends Controller
             'name' => 'required|string|max:100',
             'description' => 'nullable|string',
             'price' => 'required|numeric|min:0',
-            'category_id' => 'required|integer|exists:categories,id',
+            'category_id' => [
+                'required',
+                'integer',
+                Rule::exists('categories', 'id')->where(function ($query) {
+                    $query->where('user_id', auth()->id());
+                }),
+            ],
             'is_available' => 'nullable|boolean',
             'ingredient_ids' => 'nullable|array',
             'ingredient_ids.*' => 'exists:ingredients,id',
@@ -89,6 +96,12 @@ class PlatController extends Controller
 
     public function show(Plat $plat)
     {
+        if ((int) $plat->user_id !== (int) auth()->id()) {
+            return response()->json([
+                'message' => 'Accès interdit',
+            ], 403);
+        }
+
         $recommendation = $plat->recommendations()
             ->where('user_id', auth()->id())
             ->latest()
@@ -121,12 +134,23 @@ class PlatController extends Controller
                 'message' => 'Accès interdit',
             ], 403);
         }
+        if ((int) $plat->user_id !== (int) auth()->id()) {
+            return response()->json([
+                'message' => 'Accès interdit',
+            ], 403);
+        }
 
         $data = $request->validate([
             'name' => 'sometimes|string|max:100',
             'description' => 'sometimes|nullable|string',
             'price' => 'sometimes|numeric|min:0',
-            'category_id' => 'sometimes|integer|exists:categories,id',
+            'category_id' => [
+                'sometimes',
+                'integer',
+                Rule::exists('categories', 'id')->where(function ($query) {
+                    $query->where('user_id', auth()->id());
+                }),
+            ],
             'is_available' => 'sometimes|boolean',
             'ingredient_ids' => 'sometimes|array',
             'ingredient_ids.*' => 'exists:ingredients,id',
@@ -160,6 +184,11 @@ class PlatController extends Controller
                 'message' => 'Accès interdit',
             ], 403);
         }
+        if ((int) $plat->user_id !== (int) auth()->id()) {
+            return response()->json([
+                'message' => 'Accès interdit',
+            ], 403);
+        }
 
         $plat->delete();
 
@@ -168,9 +197,14 @@ class PlatController extends Controller
         ], 200);
     }
 
-    public function storeByCategory(Request $request, $categorieId)
+    public function storeByCategory(Request $request, Categorie $categorie)
     {
         if (!auth()->user()->isAdmin()) {
+            return response()->json([
+                'message' => 'Accès interdit',
+            ], 403);
+        }
+        if ((int) $categorie->user_id !== (int) auth()->id()) {
             return response()->json([
                 'message' => 'Accès interdit',
             ], 403);
@@ -194,7 +228,7 @@ class PlatController extends Controller
             $data['image'] = $imageUrl;
         }
 
-        $data['category_id'] = $categorieId;
+        $data['category_id'] = $categorie->id;
         $data['user_id'] = auth()->id();
         $data['is_available'] = $data['is_available'] ?? true;
 

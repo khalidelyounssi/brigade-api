@@ -9,6 +9,8 @@ class Plat extends Model
 {
     use HasFactory;
 
+    protected $table = 'plates';
+
     protected $fillable = [
         'name',
         'description',

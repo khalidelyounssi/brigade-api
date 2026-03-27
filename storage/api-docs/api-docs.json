@@ -17,7 +17,7 @@
                 "tags": [
                     "Auth"
                 ],
-                "summary": "Register new user",
+                "summary": "Register a new user",
                 "operationId": "5e9dd82c858753ad481f146678e34951",
                 "requestBody": {
                     "required": true,
@@ -28,7 +28,7 @@
                                     "name",
                                     "email",
                                     "password",
-                                    "password_confirmation"
+                                    "role"
                                 ],
                                 "properties": {
                                     "name": {
@@ -37,15 +37,26 @@
                                     },
                                     "email": {
                                         "type": "string",
-                                        "example": "amine@test.com"
+                                        "format": "email",
+                                        "example": "amine@gmail.com"
                                     },
                                     "password": {
                                         "type": "string",
                                         "example": "123456"
                                     },
-                                    "password_confirmation": {
+                                    "role": {
                                         "type": "string",
-                                        "example": "123456"
+                                        "example": "client"
+                                    },
+                                    "dietary_tags": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string"
+                                        },
+                                        "example": [
+                                            "no_sugar",
+                                            "gluten_free"
+                                        ]
                                     }
                                 },
                                 "type": "object"
@@ -55,7 +66,10 @@
                 },
                 "responses": {
                     "201": {
-                        "description": "User created"
+                        "description": "User registered successfully"
+                    },
+                    "422": {
+                        "description": "Validation error"
                     }
                 }
             }
@@ -79,7 +93,8 @@
                                 "properties": {
                                     "email": {
                                         "type": "string",
-                                        "example": "amine@test.com"
+                                        "format": "email",
+                                        "example": "amine@gmail.com"
                                     },
                                     "password": {
                                         "type": "string",
@@ -93,7 +108,10 @@
                 },
                 "responses": {
                     "200": {
-                        "description": "Login success"
+                        "description": "Login successful"
+                    },
+                    "401": {
+                        "description": "Invalid credentials"
                     }
                 }
             }
@@ -107,7 +125,10 @@
                 "operationId": "d2f0239468d539b07f33e62fab239518",
                 "responses": {
                     "200": {
-                        "description": "Logout success"
+                        "description": "Logout successful"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
                     }
                 },
                 "security": [
@@ -117,16 +138,19 @@
                 ]
             }
         },
-        "/api/user": {
+        "/api/me": {
             "get": {
                 "tags": [
                     "Auth"
                 ],
                 "summary": "Get authenticated user",
-                "operationId": "7d19332a3e6d6adc9ac383ecca5c4c1e",
+                "operationId": "f3784ad959b8f67b7c37eadc99a5839a",
                 "responses": {
                     "200": {
-                        "description": "User profile"
+                        "description": "Authenticated user"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
                     }
                 },
                 "security": [
@@ -146,6 +170,9 @@
                 "responses": {
                     "200": {
                         "description": "Categories list"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
                     }
                 },
                 "security": [
@@ -172,6 +199,18 @@
                                     "name": {
                                         "type": "string",
                                         "example": "Desserts"
+                                    },
+                                    "description": {
+                                        "type": "string",
+                                        "example": "Sweet dishes"
+                                    },
+                                    "color": {
+                                        "type": "string",
+                                        "example": "#FF5733"
+                                    },
+                                    "is_active": {
+                                        "type": "boolean",
+                                        "example": true
                                     }
                                 },
                                 "type": "object"
@@ -182,6 +221,12 @@
                 "responses": {
                     "201": {
                         "description": "Category created"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "422": {
+                        "description": "Validation error"
                     }
                 },
                 "security": [
@@ -210,7 +255,10 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "Category found"
+                        "description": "Category details"
+                    },
+                    "404": {
+                        "description": "Not found"
                     }
                 },
                 "security": [
@@ -235,9 +283,43 @@
                         }
                     }
                 ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "example": "Desserts Updated"
+                                    },
+                                    "description": {
+                                        "type": "string",
+                                        "example": "Updated description"
+                                    },
+                                    "color": {
+                                        "type": "string",
+                                        "example": "#33AAFF"
+                                    },
+                                    "is_active": {
+                                        "type": "boolean",
+                                        "example": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
                 "responses": {
                     "200": {
                         "description": "Category updated"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "description": "Not found"
                     }
                 },
                 "security": [
@@ -265,6 +347,212 @@
                 "responses": {
                     "200": {
                         "description": "Category deleted"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    },
+                    "422": {
+                        "description": "Category has active plats"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/categories/{id}/plates": {
+            "get": {
+                "tags": [
+                    "Categories"
+                ],
+                "summary": "Get plates by category",
+                "operationId": "26233f41154884a10a74afa19ff7120e",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Plates by category"
+                    },
+                    "404": {
+                        "description": "Category not found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/ingredients": {
+            "get": {
+                "tags": [
+                    "Ingredients"
+                ],
+                "summary": "List ingredients",
+                "operationId": "6f6356b24823e207bc1cf3822470ea88",
+                "responses": {
+                    "200": {
+                        "description": "Ingredients list"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Ingredients"
+                ],
+                "summary": "Create ingredient",
+                "operationId": "b77e7a3a4123062c73bf8dedb526b730",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "name"
+                                ],
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "example": "Sugar"
+                                    },
+                                    "tags": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string"
+                                        },
+                                        "example": [
+                                            "contains_sugar"
+                                        ]
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Ingredient created"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/ingredients/{id}": {
+            "put": {
+                "tags": [
+                    "Ingredients"
+                ],
+                "summary": "Update ingredient",
+                "operationId": "18ff66fcb5399313d7365d917df0a769",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "example": "Sugar Updated"
+                                    },
+                                    "tags": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string"
+                                        },
+                                        "example": [
+                                            "contains_sugar"
+                                        ]
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Ingredient updated"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "description": "Ingredient not found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Ingredients"
+                ],
+                "summary": "Delete ingredient",
+                "operationId": "d6e0f15145701f021c644cb96e3adc57",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Ingredient deleted"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "description": "Ingredient not found"
                     }
                 },
                 "security": [
@@ -284,6 +572,9 @@
                 "responses": {
                     "200": {
                         "description": "Plats list"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
                     }
                 },
                 "security": [
@@ -319,11 +610,26 @@
                                     },
                                     "price": {
                                         "type": "number",
-                                        "example": 10
+                                        "format": "float",
+                                        "example": 50
                                     },
                                     "category_id": {
                                         "type": "integer",
                                         "example": 1
+                                    },
+                                    "is_available": {
+                                        "type": "boolean",
+                                        "example": true
+                                    },
+                                    "ingredient_ids": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "integer"
+                                        },
+                                        "example": [
+                                            1,
+                                            2
+                                        ]
                                     },
                                     "image": {
                                         "type": "string",
@@ -338,6 +644,12 @@
                 "responses": {
                     "201": {
                         "description": "Plat created"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "422": {
+                        "description": "Validation error"
                     }
                 },
                 "security": [
@@ -366,7 +678,10 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "Plat found"
+                        "description": "Plat details"
+                    },
+                    "404": {
+                        "description": "Plat not found"
                     }
                 },
                 "security": [
@@ -397,16 +712,35 @@
                             "schema": {
                                 "properties": {
                                     "name": {
-                                        "type": "string"
+                                        "type": "string",
+                                        "example": "Pizza Updated"
                                     },
                                     "description": {
-                                        "type": "string"
+                                        "type": "string",
+                                        "example": "Updated description"
                                     },
                                     "price": {
-                                        "type": "number"
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 55
                                     },
                                     "category_id": {
-                                        "type": "integer"
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "is_available": {
+                                        "type": "boolean",
+                                        "example": true
+                                    },
+                                    "ingredient_ids": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "integer"
+                                        },
+                                        "example": [
+                                            1,
+                                            3
+                                        ]
                                     },
                                     "image": {
                                         "type": "string",
@@ -421,6 +755,12 @@
                 "responses": {
                     "200": {
                         "description": "Plat updated"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "description": "Plat not found"
                     }
                 },
                 "security": [
@@ -448,6 +788,247 @@
                 "responses": {
                     "200": {
                         "description": "Plat deleted"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "description": "Plat not found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/categories/{categorie}/plats": {
+            "post": {
+                "tags": [
+                    "Plats"
+                ],
+                "summary": "Create plat inside category",
+                "operationId": "921f7e88b86ec75ab183ffcf63fc2904",
+                "parameters": [
+                    {
+                        "name": "categorie",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "required": [
+                                    "name",
+                                    "price"
+                                ],
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "example": "Burger"
+                                    },
+                                    "description": {
+                                        "type": "string",
+                                        "example": "Burger maison"
+                                    },
+                                    "price": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 35
+                                    },
+                                    "is_available": {
+                                        "type": "boolean",
+                                        "example": true
+                                    },
+                                    "ingredient_ids": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "integer"
+                                        },
+                                        "example": [
+                                            1,
+                                            2
+                                        ]
+                                    },
+                                    "image": {
+                                        "type": "string",
+                                        "format": "binary"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Plat added to category"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/profile": {
+            "get": {
+                "tags": [
+                    "Profile"
+                ],
+                "summary": "Get dietary profile",
+                "operationId": "11ca85aca3ee830b0fe05a4b1af8570e",
+                "responses": {
+                    "200": {
+                        "description": "Profile retrieved successfully"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Profile"
+                ],
+                "summary": "Update dietary profile",
+                "operationId": "79c7ff433c934709c332217cca57bb72",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "dietary_tags"
+                                ],
+                                "properties": {
+                                    "dietary_tags": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string"
+                                        },
+                                        "example": [
+                                            "no_sugar",
+                                            "no_lactose"
+                                        ]
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Profile updated successfully"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/recommendations/analyze/{plate_id}": {
+            "post": {
+                "tags": [
+                    "Recommendations"
+                ],
+                "summary": "Launch recommendation analysis",
+                "operationId": "3f95735880c8a73400cea7877c54d8f0",
+                "parameters": [
+                    {
+                        "name": "plate_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "202": {
+                        "description": "Analysis launched"
+                    },
+                    "404": {
+                        "description": "Plate not found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/recommendations": {
+            "get": {
+                "tags": [
+                    "Recommendations"
+                ],
+                "summary": "List recommendation history",
+                "operationId": "4980654da8d3063665665bee69a8869a",
+                "responses": {
+                    "200": {
+                        "description": "Recommendations list"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/recommendations/{plate_id}": {
+            "get": {
+                "tags": [
+                    "Recommendations"
+                ],
+                "summary": "Get recommendation result by plate",
+                "operationId": "37ea7a8ace3c734e9542abfe51632a10",
+                "parameters": [
+                    {
+                        "name": "plate_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Recommendation details"
+                    },
+                    "404": {
+                        "description": "Recommendation not found"
                     }
                 },
                 "security": [
@@ -470,15 +1051,27 @@
     "tags": [
         {
             "name": "Auth",
-            "description": "Auth"
+            "description": "Authentication endpoints"
         },
         {
             "name": "Categories",
-            "description": "Categories"
+            "description": "Categories endpoints"
+        },
+        {
+            "name": "Ingredients",
+            "description": "Ingredients endpoints"
         },
         {
             "name": "Plats",
-            "description": "Plats"
+            "description": "Plats endpoints"
+        },
+        {
+            "name": "Profile",
+            "description": "Dietary profile endpoints"
+        },
+        {
+            "name": "Recommendations",
+            "description": "AI recommendations endpoints"
         }
     ]
 }

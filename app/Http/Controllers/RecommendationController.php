@@ -2,23 +2,23 @@
 
 namespace App\Http\Controllers;
 
+use App\Jobs\AnalyzePlateJob;
 use App\Models\Plat;
 use App\Models\Recommendation;
-use App\Jobs\AnalyzePlateJob;
 use Illuminate\Http\Request;
 
 class RecommendationController extends Controller
 {
     public function analyze($plate_id)
     {
-        $plat = Plat::with('ingredients')->findOrFail($plate_id);
+        $plat = Plat::findOrFail($plate_id);
         $user = auth()->user();
 
         Recommendation::updateOrCreate(
             [
                 'user_id' => $user->id,
                 'plate_id' => $plat->id,
-            ],
+            ], 
             [
                 'score' => 0,
                 'label' => 'Processing',
@@ -27,11 +27,11 @@ class RecommendationController extends Controller
             ]
         );
 
-        AnalyzePlateJob::dispatch($plat, $user);
+        AnalyzePlateJob::dispatch($plat->id, $user->id);
 
         return response()->json([
-            'status' => 'processing',
             'message' => 'Analyse lancée avec succès',
+            'status' => 'processing',
         ], 202);
     }
 
@@ -53,7 +53,7 @@ class RecommendationController extends Controller
             ->latest()
             ->first();
 
-        if (!$recommendation) {
+        if (! $recommendation) {
             return response()->json([
                 'message' => 'Aucune recommandation trouvée',
             ], 404);

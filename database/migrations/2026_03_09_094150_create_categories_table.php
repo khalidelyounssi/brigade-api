@@ -17,6 +17,7 @@ return new class extends Migration
     $table->text('description')->nullable();
     $table->string('color')->nullable();
     $table->boolean('is_active')->default(true);
+    $table->foreignId('user_id')->constrained()->cascadeOnDelete();
     $table->timestamps();
 });
 }
