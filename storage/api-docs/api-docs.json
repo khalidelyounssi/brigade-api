@@ -12,6 +12,31 @@
         }
     ],
     "paths": {
+        "/api/admin/stats": {
+            "get": {
+                "tags": [
+                    "Admin Stats"
+                ],
+                "summary": "Get global admin statistics",
+                "operationId": "e3299a7fa11e9a964c31a29d554a030f",
+                "responses": {
+                    "200": {
+                        "description": "Admin statistics retrieved successfully"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/api/register": {
             "post": {
                 "tags": [
@@ -1049,6 +1074,10 @@
         }
     },
     "tags": [
+        {
+            "name": "Admin Stats",
+            "description": "Admin statistics endpoint"
+        },
         {
             "name": "Auth",
             "description": "Authentication endpoints"

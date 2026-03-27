@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AdminStatsController;
 use App\Http\Controllers\IngredientController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\RecommendationController;
@@ -31,6 +32,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/ingredients/{ingredient}', [IngredientController::class, 'show']);
     Route::put('/ingredients/{ingredient}', [IngredientController::class, 'update']);
     Route::delete('/ingredients/{ingredient}', [IngredientController::class, 'destroy']);
+
+
+    Route::get('/admin/stats', [AdminStatsController::class, 'index']);
 
     // Recommendations
   
